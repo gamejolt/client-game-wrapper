@@ -1,0 +1,4 @@
+[package]
+name = "game_jolt_game_wrapper"
+version = "0.0.1"
+authors = [ "Yariv Livay <yarivlivay@gmail.com>" ]
