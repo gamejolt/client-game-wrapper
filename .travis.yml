@@ -23,8 +23,8 @@ addons:
       - g++-4.9-multilib
   artifacts:
     paths:
-      - ./bin/game_jolt_client_wrapper_linux
-      - ./bin/game_jolt_client_wrapper_osx
+      - ./bin/game_jolt_game_wrapper_linux
+      - ./bin/game_jolt_game_wrapper_osx
 
 before_install:
   - rustc -V
@@ -38,8 +38,8 @@ before_install:
 
 install:
   - npm i
-  - tsd rate
-  - tsd install
+#   - tsd rate
+#   - tsd install
 
 before_script:
   - cargo test --verbose
