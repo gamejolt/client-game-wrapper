@@ -27,4 +27,4 @@ test_script:
   - npm test
 
 artifacts:
-  - path: bin\game_jolt_game_wrapper_win32.exe
+  - path: target\release\game_jolt_game_wrapper.exe

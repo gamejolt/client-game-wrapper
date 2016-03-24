@@ -39,17 +39,7 @@ gulp.task( 'build-rust', shell.task( [
    'cargo build --release',
 ] ) );
 
-gulp.task( 'rust', [ 'build-rust' ], function()
-{
-    let executableName = process.platform === 'win32' ? 'game_jolt_game_wrapper.exe' : 'game_jolt_game_wrapper';
-    let newExecutableName = process.platform === 'win32' ? 'game_jolt_game_wrapper_win32.exe' : 'game_jolt_game_wrapper_' + process.platform;
-
-    gulp
-        .src( path.join( __dirname, 'target', 'release', executableName ) )
-        .pipe( gulp.dest( path.resolve( path.join( __dirname, 'bin' ) ) ) );
-} );
-
-gulp.task( 'build', [ 'rust' ], function( cb )
+gulp.task( 'build', [ 'build-rust' ], function( cb )
 {
 	return sequence( 'clean', 'js', cb );
 } );

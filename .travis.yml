@@ -23,8 +23,7 @@ addons:
       - g++-4.9-multilib
   artifacts:
     paths:
-      - ./bin/game_jolt_game_wrapper_linux
-      - ./bin/game_jolt_game_wrapper_osx
+      - ./target/release/game_jolt_game_wrapper
 
 before_install:
   - rustc -V
