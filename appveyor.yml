@@ -1,0 +1,30 @@
+platform:
+  - x86
+
+environment:
+  matrix:
+  - TARGET: i686-pc-windows-msvc
+  - TARGET: i686-pc-windows-gnu
+
+install:
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-${env:TARGET}.exe"
+  - rust-nightly-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+  - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
+  - SET PATH=%PATH%;C:\MinGW\bin
+  - rustc -V
+  - cargo -V
+  - ps: Install-Product node 5.5.0 x86 # We need npm@3 for windows builds
+  - npm i -g gulp tsd
+  - npm i
+  - tsd rate
+  - tsd install
+
+build_script:
+  - gulp build
+
+test_script:
+  - cargo test --verbose
+  - npm test
+
+artifacts:
+  - path: bin\game_jolt_client_wrapper_win32.exe
