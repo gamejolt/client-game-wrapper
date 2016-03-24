@@ -40,7 +40,7 @@ let newExecutableName = process.platform === 'win32' ? 'game_jolt_game_wrapper_w
 
 gulp.task( 'rust', shell.task( [
 	'cargo build --release',
-    'mkdir -p "' + path.join( __dirname, 'bin' ) + '"',
+    'mkdir "' + path.join( __dirname, 'bin' ) + '"',
 	'cp "' + path.resolve( path.join( __dirname, 'target', 'release', executableName ) ) + '" "' + path.resolve( path.join( __dirname, 'bin', newExecutableName ) ) + '"',
 ] ) );
 
