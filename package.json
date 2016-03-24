@@ -1,0 +1,16 @@
+{
+  "name": "game_jolt_game_wrapper",
+  "version": "0.0.1",
+  "devDependencies": {
+    "del": "2.2.0",
+    "gulp": "3.9.0",
+    "gulp-load-plugins": "1.1.0",
+    "gulp-plumber": "1.0.1",
+    "gulp-shell": "0.5.2",
+    "gulp-sourcemaps": "1.6.0",
+    "gulp-typescript": "2.9.2",
+    "run-sequence": "1.1.4",
+    "tsd": "^0.6.5",
+    "typescript": "1.7.5"
+  }
+}
