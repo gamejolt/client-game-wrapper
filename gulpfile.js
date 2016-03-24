@@ -35,18 +35,23 @@ gulp.task( 'js', function()
 		.pipe( gulp.dest( './build' ) );
 } );
 
-let executableName = process.platform === 'win32' ? 'game_jolt_game_wrapper.exe' : 'game_jolt_game_wrapper';
-let newExecutableName = process.platform === 'win32' ? 'game_jolt_game_wrapper_win32.exe' : 'game_jolt_game_wrapper_' + process.platform;
-
-gulp.task( 'rust', shell.task( [
-	'cargo build --release',
-    'mkdir "' + path.join( __dirname, 'bin' ) + '"',
-	'cp "' + path.resolve( path.join( __dirname, 'target', 'release', executableName ) ) + '" "' + path.resolve( path.join( __dirname, 'bin', newExecutableName ) ) + '"',
+gulp.task( 'build-rust', shell.task( [
+   'cargo build --release',
 ] ) );
 
-gulp.task( 'build', function( cb )
+gulp.task( 'rust', [ 'build-rust' ], function()
 {
-	return sequence( 'clean', 'js', 'rust', cb );
+    let executableName = process.platform === 'win32' ? 'game_jolt_game_wrapper.exe' : 'game_jolt_game_wrapper';
+    let newExecutableName = process.platform === 'win32' ? 'game_jolt_game_wrapper_win32.exe' : 'game_jolt_game_wrapper_' + process.platform;
+
+    gulp
+        .src( path.join( __dirname, 'target', 'release', executableName ) )
+        .pipe( gulp.dest( path.resolve( path.join( __dirname, 'bin' ) ) ) );
+} );
+
+gulp.task( 'build', [ 'rust' ], function( cb )
+{
+	return sequence( 'clean', 'js', cb );
 } );
 
 gulp.task( 'watch', [ 'build' ], function()
