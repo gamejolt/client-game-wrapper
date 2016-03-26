@@ -37,8 +37,8 @@ before_install:
 
 install:
   - npm i
-   - tsd rate
-   - tsd install
+  - tsd rate
+  - tsd install
 
 before_script:
   - cargo test --verbose
