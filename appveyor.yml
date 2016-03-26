@@ -16,8 +16,8 @@ install:
   - ps: Install-Product node 5.5.0 x86 # We need npm@3 for windows builds
   - npm i -g gulp tsd
   - npm i
-#   - tsd rate
-#   - tsd install
+  - tsd rate
+  - tsd install
 
 build_script:
   - gulp build
