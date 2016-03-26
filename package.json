@@ -1,16 +1,20 @@
 {
   "name": "game_jolt_game_wrapper",
   "version": "0.0.1",
+  "main": "build/index.js",
   "devDependencies": {
     "del": "2.2.0",
+    "download": "^4.4.3",
     "gulp": "3.9.0",
     "gulp-load-plugins": "1.1.0",
     "gulp-plumber": "1.0.1",
     "gulp-shell": "0.5.2",
     "gulp-sourcemaps": "1.6.0",
     "gulp-typescript": "2.9.2",
+    "lodash": "^4.6.1",
+    "request-promise": "^2.0.1",
     "run-sequence": "1.1.4",
     "tsd": "0.6.5",
-    "typescript": "1.7.5"
+    "typescript": "1.8.9"
   }
 }

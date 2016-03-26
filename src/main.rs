@@ -4,40 +4,55 @@ use std::path::Path;
 use std::net::{ TcpListener, TcpStream };
 use std::thread;
 
+extern crate argparse;
+use argparse::{ ArgumentParser };
+
 fn main()
 {
-    let args: Vec<String> = std::env::args().collect();
-    match args.len() {
-        1 => { println!( "Missing argument, which game to run?" ); return; },
-        2 => { println!( "Missing argument, which port to host the wrapper on?" ); return; },
-        _ => {},
+    let mut wrapper_id = String::new();
+    let mut game_file = String::new();
+    let mut game_port: u16 = 0;
+    let mut game_args: Vec<String> = std::vec::Vec::new();
+
+    {
+        let mut ap: ArgumentParser = ArgumentParser::new();
+        ap.refer( &mut wrapper_id ).add_argument( "wrapper-id", argparse::Store, "A unique identifier for the wrapper" ).required();
+        ap.refer( &mut game_file ).add_argument( "game-file", argparse::Store, "Path to the game file" ).required();
+        ap.refer( &mut game_port ).add_argument( "wrapper-port", argparse::Store, "Port to host the wrapper on" ).required();
+        ap.refer( &mut game_args ).add_argument( "game-args", argparse::Collect, "Additional arguments to the game file" );
+        ap.parse_args_or_exit();
     }
 
-    let game_file: &str = &args[1];
-    let game_file_owned: String = game_file.to_owned();
-    let game_port = *&args[2].parse::<u16>().ok().expect( "Invalid port given for hosting this game wrapper" );
-    println!( "This game you want to run is {} on port {}", game_file, game_port );
-
+    let task_wrapper_id = wrapper_id.clone();
+    let task_game_file = game_file.clone();
+    let task_game_port = game_port;
+    let task_game_args = game_args.clone();
     thread::spawn( move || {
-        let game_file = &game_file_owned;
 
-        let listener: TcpListener = TcpListener::bind( ( "127.0.0.1", game_port ) ).unwrap_or_else( |e| panic!( "Couldn't bind to given port: {}", e ) );
+        let listener: TcpListener = match TcpListener::bind( ( "127.0.0.1", task_game_port ) ) {
+            Ok( listener ) => listener,
+            Err( e ) => {
+                println!( "Couldn\t bind  to given port: {}", e );
+                std::process::exit( -1337 );
+            },
+        };
 
         for stream in listener.incoming() {
             let mut stream: TcpStream = stream.unwrap_or_else( |e| panic!( "Could not get incoming connection stream: {}", e ) );
-            let out_str = String::from( "v1.0:Game Wrapper:" ) + game_file;
+            let out_str = String::from( "v0.0.1:Game Wrapper:" ) + &task_wrapper_id + ":" + &task_game_file + ":\"" + &task_game_args.join( &"\",\"" ) + "\"";
             stream.write( out_str.as_bytes() ).unwrap_or_else( |e| panic!( "Could not send reply to the new connection: {}", e ) );
         }
     } );
 
-    let path = Path::new( game_file );
+    let path = Path::new( &game_file );
     let cwd: &str = path.parent()
         .expect( "Could not get parent dir from path" )
         .to_str()
         .expect( "Could not parse parent dir name from path" );
 
-    let mut game_handle: Child = Command::new( game_file )
+    let mut game_handle: Child = Command::new( &game_file )
         .current_dir( cwd )
+        .args( game_args.as_slice() )
         .stderr( Stdio::piped() )
         .spawn()
         .unwrap_or_else( |e| panic!( "Couldn't launch game: {}", e ) );
