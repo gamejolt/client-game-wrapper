@@ -172,7 +172,7 @@ gulp.task( 'fetch-binaries', function()
             }
 
             let promises = [];
-            for ( let os of [ 'win32' ] ) {
+            for ( let os of [ 'win32', 'linux', 'osx' ] ) {
                 promises.push( new Promise( function( resolve, reject )
                 {
                     let parsed = path.parse( path.basename( urls[ os ] ) );
