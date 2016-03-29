@@ -23,7 +23,7 @@ addons:
       - g++-4.9-multilib
   artifacts:
     paths:
-      - ./target/release/game_jolt_game_wrapper
+      - "./target/release/game_jolt_game_wrapper"
 
 before_install:
   - rustc -V
@@ -46,3 +46,7 @@ before_script:
 
 script:
   - npm test
+
+env:
+  matrix:
+    secure: QFayU8sOm3HN8wF1uyS2dpCMGsILKcZxebhDw5oRBh4z7I4iIG+OEmv7IRSzyq+EgH+uAbfM0cDNcAupsVdlgmJVZkmr+Is2qHBa81ALHz7mMloR86wREii9+mX0919KE6l8k3v5REnObcb3fmgGTMbX3KUKgA42KufE0gsxskXlSc2WWFbiBw2OotaFkRmOTKggPujKZ7u1hUJ/gNENBHTAqpxwOC1uDOlbo8CJNgD+9chMTBv1T60gBQRLlI0Vr+4r94ix/8jCMdhzdQc7MQWkbGe0g69DLG45IQ1S2N3VblMvxt85R2xdLTuHNcBFo5o/bWqIOZkjBqvOmzdntfJMCofR4et04iQV+hja02zb7AJM+kmP7qxEFA6bygePPLxY68vxDPp4zdIQh9o8+fsafHbBFOpLz3hTyjEwnYM2Z+tuGsdaSt1pyPzAK3jud1PsCMcOUdLLwjznwfiof1ogKPrPZ6m+N+JF6kQjOOcseCTs2a97mJ6+7qVwe/W2v+V3w7xoR+8IujnOgSApyiZWw/xnz/A0wMkYR0VqmY9N/Mgyv//LoxTPqRi7Ky0YHcdSkwfA2u2E18AwukoowJPGJXd4LnnYjqnr5yWYTQodRZZcCwqStiFJGkVFOKm3CZwo2es/nBmVzz+69L7uwicsabLfA/UdKUB5luRExiU=
