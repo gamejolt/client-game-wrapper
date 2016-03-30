@@ -10,7 +10,7 @@ class GameWrapper {
                 return path.join(binFolder, 'game_jolt_game_wrapper_win32.exe');
             case 'linux':
                 return path.join(binFolder, 'game_jolt_game_wrapper_linux');
-            case 'osx':
+            case 'darwin':
                 return path.join(binFolder, 'game_jolt_game_wrapper_osx');
         }
         // Plan for the future, yo
