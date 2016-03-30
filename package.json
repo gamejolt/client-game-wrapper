@@ -1,6 +1,16 @@
 {
-  "name": "game_jolt_game_wrapper",
+  "name": "client-game-wrapper",
+  "description": "Acts as a middleware between the client and the game, allowing reliable presence, game API integration and more!",
   "version": "0.0.1",
+  "bugs": {
+    "url": "https://github.com/gamejolt/client-game-wrapper/issues"
+  },
+  "license": "MIT",
+  "author": "Game Jolt Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gamejolt/client-game-wrapper.git"
+  },
   "main": "build/index.js",
   "devDependencies": {
     "del": "2.2.0",
