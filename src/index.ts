@@ -1,5 +1,6 @@
 'use strict';
 
+import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
 import * as cp from 'child_process';
@@ -24,7 +25,7 @@ class GameWrapper
 			'What kind of potato are you running on?' );
 	}
 
-	private static findFreePort(): number
+	private static findFreePort()
 	{
 		for ( let i = 0; i < 5; i++ ) {
 			// Get a random port between 1024 and 65535
@@ -42,6 +43,9 @@ class GameWrapper
 		let wrapperExecutable = this.getWrapperExecutable();
 		let wrapperPort = this.findFreePort();
 
+		// Ensure that the wrapper executable is.. executable.
+		fs.chmodSync( wrapperExecutable, '0755' );
+		
 		let child = cp.spawn( wrapperExecutable, [ wrapperId, cmd, wrapperPort.toString() ].concat( args ), options );
 		child.unref();
 
