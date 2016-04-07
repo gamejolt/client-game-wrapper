@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const net = require('net');
 const path = require('path');
 const cp = require('child_process');
@@ -32,6 +33,8 @@ class GameWrapper {
     static start(wrapperId, cmd, args, options) {
         let wrapperExecutable = this.getWrapperExecutable();
         let wrapperPort = this.findFreePort();
+        // Ensure that the wrapper executable is.. executable.
+        fs.chmodSync(wrapperExecutable, '0755');
         let child = cp.spawn(wrapperExecutable, [wrapperId, cmd, wrapperPort.toString()].concat(args), options);
         child.unref();
         return wrapperPort;
