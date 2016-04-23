@@ -135,7 +135,7 @@ gulp.task( 'fetch-binaries', function()
             }
 
             let appveyorJob = 0;
-            if ( response.body.build.jobs[0].name === 'Environment: TARGET=i686-pc-windows-msvc' ) {
+            if ( response.body.build.jobs[0].name === 'Environment: TARGET=i686-pc-windows-gnu' ) {
                 appveyorJob = response.body.build.jobs[0];
             }
             else {
