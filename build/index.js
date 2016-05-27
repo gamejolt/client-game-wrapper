@@ -1,6 +1,5 @@
 'use strict';
 const fs = require('fs');
-const net = require('net');
 const path = require('path');
 const cp = require('child_process');
 class GameWrapper {
@@ -19,25 +18,12 @@ class GameWrapper {
             'Pepperidge Farm remembers back in 2016 we were still using Windows, Linux or Mac. Kids these days...' :
             'What kind of potato are you running on?');
     }
-    static findFreePort() {
-        for (let i = 0; i < 5; i++) {
-            // Get a random port between 1024 and 65535
-            let port = 1024 + Math.floor(Math.random() * (0xFFFF - 1024));
-            let server = net.createServer();
-            server.listen(port);
-            server.close();
-            return port;
-        }
-        return 0;
-    }
-    static start(wrapperId, cmd, args, options) {
+    static start(wrapperId, pidPath, packagePath, executablePath, args, options) {
         let wrapperExecutable = this.getWrapperExecutable();
-        let wrapperPort = this.findFreePort();
         // Ensure that the wrapper executable is.. executable.
         fs.chmodSync(wrapperExecutable, '0755');
-        let child = cp.spawn(wrapperExecutable, [wrapperId, cmd, wrapperPort.toString()].concat(args), options);
+        let child = cp.spawn(wrapperExecutable, [wrapperId, pidPath, packagePath, executablePath].concat(args), options);
         child.unref();
-        return wrapperPort;
     }
 }
 module.exports = GameWrapper;
