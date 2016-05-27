@@ -25,31 +25,15 @@ class GameWrapper
 			'What kind of potato are you running on?' );
 	}
 
-	private static findFreePort()
-	{
-		for ( let i = 0; i < 5; i++ ) {
-			// Get a random port between 1024 and 65535
-			let port = 1024 + Math.floor( Math.random() * ( 0xFFFF - 1024 ) );
-			let server = net.createServer();
-			server.listen( port );
-			server.close();
-			return port;
-		}
-		return 0;
-	}
-
-	static start( wrapperId: string, cmd: string, args: string[], options?: cp.SpawnOptions )
+	static start( wrapperId: string, pidPath: string, packagePath: string, executablePath: string, args: string[], options?: cp.SpawnOptions )
 	{
 		let wrapperExecutable = this.getWrapperExecutable();
-		let wrapperPort = this.findFreePort();
 
 		// Ensure that the wrapper executable is.. executable.
 		fs.chmodSync( wrapperExecutable, '0755' );
-		
-		let child = cp.spawn( wrapperExecutable, [ wrapperId, cmd, wrapperPort.toString() ].concat( args ), options );
-		child.unref();
 
-		return wrapperPort;
+		let child = cp.spawn( wrapperExecutable, [ wrapperId, pidPath, packagePath, executablePath ].concat( args ), options );
+		child.unref();
 	}
 }
 

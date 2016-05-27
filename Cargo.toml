@@ -1,7 +1,10 @@
 [package]
 name = "game_jolt_game_wrapper"
-version = "0.0.1"
+version = "0.1.0"
 authors = [ "Yariv Livay <yarivlivay@gmail.com>" ]
 
 [dependencies]
 argparse = "0.2.1"
+rand = "0.3"
+hyper = "0.9.6"
+sha1 = "0.1.1"
