@@ -60,7 +60,7 @@ fn parse_credentials( credentials_file: &Path ) -> Result<Credentials, &str>
 
 fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token: &str ) -> bool
 {
-    let mut url: String = "http://api.gamejolt.com/api/game/v1_2/client-sessions/".to_string();
+    let mut url: String = "http://api.gamejolt.com/api/game/v1_1/client-sessions/".to_string();
     url.push_str( endpoint );
     url.push_str( &format!( "?username={}&user_token={}&format=dump", username, user_token ) );
 
@@ -124,6 +124,8 @@ fn main()
             let mut writer = BufWriter::new( f );
             writer.write( listener_data.port.to_string().as_bytes() )
                 .expect( "Failed to write pid file" );
+            writer.flush()
+                .expect( "Failed to flush pid file" );
             drop( writer );
         },
         Err( e ) => println!( "Failed to write pid file: {}", e ),
