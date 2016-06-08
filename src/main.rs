@@ -2,12 +2,14 @@ use std::process::{ Child, Command, Stdio, ExitStatus };
 use std::io::{ BufRead, BufReader, BufWriter, Read,  Write };
 use std::path::{ Path, PathBuf };
 use std::net::{ TcpListener, TcpStream };
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::fs::File;
 
 extern crate argparse;
 extern crate rand;
 extern crate hyper;
+extern crate time;
 
 use argparse::{ ArgumentParser };
 use rand::distributions::{IndependentSample, Range};
@@ -58,11 +60,11 @@ fn parse_credentials( credentials_file: &Path ) -> Result<Credentials, &str>
     }
 }
 
-fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token: &str ) -> bool
+fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token: &str, time_utc: &i64 ) -> bool
 {
-    let mut url: String = "http://api.gamejolt.com/api/game/v1_1/client-sessions/".to_string();
+    let mut url: String = "http://development.gamejolt.com/api/game/v1_1/client-sessions/".to_string();
     url.push_str( endpoint );
-    url.push_str( &format!( "?username={}&user_token={}&format=dump", username, user_token ) );
+    url.push_str( &format!( "?username={}&user_token={}&timestamp={}&format=dump", username, user_token, time_utc ) );
 
     let response = client.get( &url ).send();
     if response.is_err() {
@@ -119,7 +121,7 @@ fn main()
     let mut pid_path = PathBuf::from( pid_path );
     pid_path.push( wrapper_id );
 
-    match File::open( &pid_path ).or( File::create( &pid_path ) ) {
+    match File::create( &pid_path ) {
         Ok( f ) => {
             let mut writer = BufWriter::new( f );
             writer.write( listener_data.port.to_string().as_bytes() )
@@ -155,19 +157,33 @@ fn main()
         credentials = get_credentials.unwrap();
     }
 
+    let mut timestamp = time::get_time().sec;
+    println!( "Current timestamp: {}", &timestamp );
+    let timestamp_lock = Arc::new( Mutex::new( timestamp ) );
+
     if supports_game_api {
         game_args.push( credentials.username.to_string() );
         game_args.push( credentials.user_token.to_string() );
 
         let game_api_username = credentials.username.clone();
         let game_api_token = credentials.user_token.clone();
+
+        let timestamp_thread_lock = timestamp_lock.clone();
         thread::spawn( move || {
             let client = Client::new();
-            make_api_request( &client, "open", &game_api_username, &game_api_token );
+            make_api_request( &client, "open", &game_api_username, &game_api_token, &0 );
+            let timestamp = time::get_time().sec;
+            println!( "Updating timestamp to: {}", &timestamp );
+            {
+                match timestamp_thread_lock.lock() {
+                    Ok( mut timestamp_guard ) => *timestamp_guard = timestamp,
+                    Err(_) => println!( "Couldn't get a lock on the timestamp field." )
+                }
+            }
             loop {
                 std::thread::sleep( std::time::Duration::from_secs( 10 ) );
-                if !make_api_request( &client, "ping", &game_api_username, &game_api_token ) {
-                    make_api_request( &client, "open", &game_api_username, &game_api_token );
+                if !make_api_request( &client, "ping", &game_api_username, &game_api_token, &timestamp ) {
+                    make_api_request( &client, "open", &game_api_username, &game_api_token, &timestamp );
                 }
             }
         } );
@@ -184,7 +200,15 @@ fn main()
 
     if supports_game_api {
         let client = Client::new();
-        make_api_request( &client, "close", &credentials.username, &credentials.user_token );
+        timestamp = match timestamp_lock.lock() {
+            Ok( timestamp_guard ) => *timestamp_guard,
+            Err(_) => {
+                println!( "Couldn't get a lock on the timestamp field when closing, using default timestamp." );
+                timestamp
+            }
+        };
+        println!( "Closing with timestamp: {}", &timestamp );
+        make_api_request( &client, "close", &credentials.username, &credentials.user_token, &timestamp );
     }
 
     if std::fs::remove_file( &pid_path ).is_err() {
