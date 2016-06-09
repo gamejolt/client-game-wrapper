@@ -2,7 +2,6 @@ use std::process::{ Child, Command, Stdio, ExitStatus };
 use std::io::{ BufRead, BufReader, BufWriter, Read,  Write };
 use std::path::{ Path, PathBuf };
 use std::net::{ TcpListener, TcpStream };
-use std::sync::{Arc, Mutex};
 use std::thread;
 use std::fs::File;
 
@@ -60,11 +59,11 @@ fn parse_credentials( credentials_file: &Path ) -> Result<Credentials, &str>
     }
 }
 
-fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token: &str, time_utc: &i64 ) -> bool
+fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token: &str, start_time_utc: &i64, current_time_utc: &i64 ) -> bool
 {
     let mut url: String = "http://development.gamejolt.com/api/game/v1_1/client-sessions/".to_string();
     url.push_str( endpoint );
-    url.push_str( &format!( "?username={}&user_token={}&timestamp={}&format=dump", username, user_token, time_utc ) );
+    url.push_str( &format!( "?username={}&user_token={}&start_timestamp={}&current_timestamp={}&format=dump", username, user_token, start_time_utc, current_time_utc ) );
 
     let response = client.get( &url ).send();
     if response.is_err() {
@@ -72,7 +71,7 @@ fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token
     }
 
     let mut response = response.unwrap();
-    match response.status {
+    let result = match response.status {
         hyper::Ok => {
             let mut result: String = String::new();
             match response.read_to_string( &mut result ) {
@@ -81,7 +80,8 @@ fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token
             }
         }
         _ => false
-    }
+    };
+    result
 }
 
 fn main()
@@ -157,9 +157,7 @@ fn main()
         credentials = get_credentials.unwrap();
     }
 
-    let mut timestamp = time::get_time().sec;
-    println!( "Current timestamp: {}", &timestamp );
-    let timestamp_lock = Arc::new( Mutex::new( timestamp ) );
+    let timestamp = time::get_time().sec;
 
     if supports_game_api {
         game_args.push( credentials.username.to_string() );
@@ -167,23 +165,19 @@ fn main()
 
         let game_api_username = credentials.username.clone();
         let game_api_token = credentials.user_token.clone();
+        let game_api_timestamp = timestamp.clone();
 
-        let timestamp_thread_lock = timestamp_lock.clone();
         thread::spawn( move || {
-            let client = Client::new();
-            make_api_request( &client, "open", &game_api_username, &game_api_token, &0 );
-            let timestamp = time::get_time().sec;
-            println!( "Updating timestamp to: {}", &timestamp );
-            {
-                match timestamp_thread_lock.lock() {
-                    Ok( mut timestamp_guard ) => *timestamp_guard = timestamp,
-                    Err(_) => println!( "Couldn't get a lock on the timestamp field." )
-                }
-            }
+            let mut client = Client::new();
+            client.set_write_timeout( Some( std::time::Duration::new( 5, 0 ) ) );
+            client.set_read_timeout( Some( std::time::Duration::new( 5, 0 ) ) );
+            let mut timestamp = time::get_time().sec;
+            make_api_request( &client, "open", &game_api_username, &game_api_token, &game_api_timestamp, &timestamp );
             loop {
                 std::thread::sleep( std::time::Duration::from_secs( 10 ) );
-                if !make_api_request( &client, "ping", &game_api_username, &game_api_token, &timestamp ) {
-                    make_api_request( &client, "open", &game_api_username, &game_api_token, &timestamp );
+                if !make_api_request( &client, "ping", &game_api_username, &game_api_token, &0, &0, ) {
+                    timestamp = time::get_time().sec;
+                    make_api_request( &client, "open", &game_api_username, &game_api_token, &game_api_timestamp, &timestamp );
                 }
             }
         } );
@@ -199,16 +193,10 @@ fn main()
     let result: ExitStatus = game_handle.wait().unwrap_or_else( |e| panic!( "Couldn't wait for game to launch/finish {}", e ) );
 
     if supports_game_api {
-        let client = Client::new();
-        timestamp = match timestamp_lock.lock() {
-            Ok( timestamp_guard ) => *timestamp_guard,
-            Err(_) => {
-                println!( "Couldn't get a lock on the timestamp field when closing, using default timestamp." );
-                timestamp
-            }
-        };
-        println!( "Closing with timestamp: {}", &timestamp );
-        make_api_request( &client, "close", &credentials.username, &credentials.user_token, &timestamp );
+        let mut client = Client::new();
+        client.set_write_timeout( Some( std::time::Duration::from_secs( 5 ) ) );
+        client.set_read_timeout( Some( std::time::Duration::from_secs( 5 ) ) );
+        make_api_request( &client, "close", &credentials.username, &credentials.user_token, &0, &0 );
     }
 
     if std::fs::remove_file( &pid_path ).is_err() {
