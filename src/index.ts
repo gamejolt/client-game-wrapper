@@ -45,7 +45,7 @@ class GameWrapper
 
 		// Ensure that the wrapper executable is.. executable.
 		fs.chmodSync( wrapperExecutable, '0755' );
-		
+
 		let child = cp.spawn( wrapperExecutable, [ wrapperId, cmd, wrapperPort.toString() ].concat( args ), options );
 		child.unref();
 
