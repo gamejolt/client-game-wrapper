@@ -33,12 +33,10 @@ before_install:
   - source ./.nvm/nvm.sh
   - nvm install stable
   - nvm use stable
-  - npm install -g gulp tsd
+  - npm install -g gulp-cli
 
 install:
   - npm i
-  - tsd rate
-  - tsd install
 
 before_script:
   - cargo test --verbose

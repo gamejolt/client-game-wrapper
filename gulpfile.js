@@ -11,33 +11,14 @@ let path = require( 'path' );
 let del = require( 'del' );
 let Download = require( 'download' );
 
-let typescript = plugins.typescript.createProject( './src/tsconfig.json', {
-	typescript: require( 'typescript' ),
-} );
-
 gulp.task( 'clean', function()
 {
 	return del( './build/**/*' );
 } );
 
-gulp.task( 'js', function()
-{
-	return gulp.src( './src/**/*.ts' )
-		.pipe( plugins.plumber() )
-		.pipe( plugins.sourcemaps.init() )
-		.pipe( plugins.typescript( typescript ) )
-		.pipe( plugins.sourcemaps.write( '.', {
-			sourceRoot: function( file )
-			{
-				// Gotta return a relative path from the build file to the source folder.
-				return path.relative(
-					path.join( __dirname, file.relative ),
-					path.join( __dirname, 'src' )
-				) + path.sep;
-			}
-		} ) )
-		.pipe( gulp.dest( './build' ) );
-} );
+gulp.task( 'js', shell.task( [
+   'tsc',
+] ) );
 
 gulp.task( 'build-rust', shell.task( [
    'cargo build --release',
@@ -50,7 +31,7 @@ gulp.task( 'build', [ 'build-rust' ], function( cb )
 
 gulp.task( 'watch', [ 'build' ], function()
 {
-	gulp.watch( [ './src/**/*' ], [ 'build' ] );
+	gulp.watch( [ './src/**/*', 'tsconfig.json' ], [ 'build' ] );
 } );
 
 gulp.task( 'fetch-binaries', function()

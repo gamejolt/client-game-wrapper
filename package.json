@@ -1,7 +1,7 @@
 {
   "name": "client-game-wrapper",
   "description": "Acts as a middleware between the client and the game, allowing reliable presence, game API integration and more!",
-  "version": "0.1.0",
+  "version": "0.0.5",
   "bugs": {
     "url": "https://github.com/gamejolt/client-game-wrapper/issues"
   },
@@ -13,18 +13,15 @@
   },
   "main": "build/index.js",
   "devDependencies": {
+    "@types/node": "^4.0.30",
     "del": "2.2.0",
     "download": "^4.4.3",
     "gulp": "3.9.0",
     "gulp-load-plugins": "1.1.0",
-    "gulp-plumber": "1.0.1",
     "gulp-shell": "0.5.2",
-    "gulp-sourcemaps": "1.6.0",
-    "gulp-typescript": "2.9.2",
     "lodash": "^4.6.1",
     "request-promise": "^2.0.1",
     "run-sequence": "1.1.4",
-    "tsd": "0.6.5",
-    "typescript": "1.8.9"
+    "typescript": "2.2.2"
   }
 }
