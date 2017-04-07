@@ -130,9 +130,9 @@ fn main()
     }
 
     if supports_game_api {
-        game_args.push( String::from( "gj_username" ) );
+        game_args.push( String::from( "gjapi_username" ) );
         game_args.push( credentials.username.to_string() );
-        game_args.push( String::from( "gj_token" ) );
+        game_args.push( String::from( "gjapi_token" ) );
         game_args.push( credentials.user_token.to_string() );
     }
 
