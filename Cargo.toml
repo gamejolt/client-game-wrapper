@@ -6,6 +6,4 @@ authors = [ "Yariv Livay <yarivlivay@gmail.com>" ]
 [dependencies]
 argparse = "0.2.1"
 rand = "0.3"
-hyper = "0.9.6"
 sha1 = "0.1.1"
-time = "0.1.35"
