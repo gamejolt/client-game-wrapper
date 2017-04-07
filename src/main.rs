@@ -45,6 +45,7 @@ fn parse_credentials( credentials_file: &Path ) -> Result<Credentials, &str>
     let mut credentials_version = String::new();
     reader.read_line( &mut credentials_version ).unwrap();
     match credentials_version.trim().as_ref() {
+        "0.1.0" |
         "0.2.0" => {
             let mut username = String::new();
             let mut token = String::new();
