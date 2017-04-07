@@ -7,12 +7,9 @@ use std::fs::File;
 
 extern crate argparse;
 extern crate rand;
-extern crate hyper;
-extern crate time;
 
 use argparse::{ ArgumentParser };
 use rand::distributions::{IndependentSample, Range};
-use hyper::Client;
 
 struct ListenerData {
     listener: TcpListener,
@@ -57,31 +54,6 @@ fn parse_credentials( credentials_file: &Path ) -> Result<Credentials, &str>
         },
         _ => Err( "Unknown version" ),
     }
-}
-
-fn make_api_request( client: &Client, endpoint: &str, username: &str, user_token: &str, start_time_utc: &i64, current_time_utc: &i64 ) -> bool
-{
-    let mut url: String = "http://development.gamejolt.com/api/game/v1_1/client-sessions/".to_string();
-    url.push_str( endpoint );
-    url.push_str( &format!( "?username={}&user_token={}&start_timestamp={}&current_timestamp={}&format=dump", username, user_token, start_time_utc, current_time_utc ) );
-
-    let response = client.get( &url ).send();
-    if response.is_err() {
-        return false
-    }
-
-    let mut response = response.unwrap();
-    let result = match response.status {
-        hyper::Ok => {
-            let mut result: String = String::new();
-            match response.read_to_string( &mut result ) {
-                Ok(_) => result.starts_with( "SUCCESS" ),
-                Err(_) => false,
-            }
-        }
-        _ => false
-    };
-    result
 }
 
 fn main()
@@ -157,30 +129,11 @@ fn main()
         credentials = get_credentials.unwrap();
     }
 
-    let timestamp = time::get_time().sec;
-
     if supports_game_api {
+        game_args.push( String::from( "gj_username" ) );
         game_args.push( credentials.username.to_string() );
+        game_args.push( String::from( "gj_token" ) );
         game_args.push( credentials.user_token.to_string() );
-
-        let game_api_username = credentials.username.clone();
-        let game_api_token = credentials.user_token.clone();
-        let game_api_timestamp = timestamp.clone();
-
-        thread::spawn( move || {
-            let mut client = Client::new();
-            client.set_write_timeout( Some( std::time::Duration::new( 5, 0 ) ) );
-            client.set_read_timeout( Some( std::time::Duration::new( 5, 0 ) ) );
-            let mut timestamp = time::get_time().sec;
-            make_api_request( &client, "open", &game_api_username, &game_api_token, &game_api_timestamp, &timestamp );
-            loop {
-                std::thread::sleep( std::time::Duration::from_secs( 10 ) );
-                if !make_api_request( &client, "ping", &game_api_username, &game_api_token, &0, &0, ) {
-                    timestamp = time::get_time().sec;
-                    make_api_request( &client, "open", &game_api_username, &game_api_token, &game_api_timestamp, &timestamp );
-                }
-            }
-        } );
     }
 
     let mut game_handle: Child = Command::new( &game_file )
@@ -191,13 +144,6 @@ fn main()
         .unwrap_or_else( |e| panic!( "Couldn't launch game: {}", e ) );
 
     let result: ExitStatus = game_handle.wait().unwrap_or_else( |e| panic!( "Couldn't wait for game to launch/finish {}", e ) );
-
-    if supports_game_api {
-        let mut client = Client::new();
-        client.set_write_timeout( Some( std::time::Duration::from_secs( 5 ) ) );
-        client.set_read_timeout( Some( std::time::Duration::from_secs( 5 ) ) );
-        make_api_request( &client, "close", &credentials.username, &credentials.user_token, &0, &0 );
-    }
 
     if std::fs::remove_file( &pid_path ).is_err() {
         println!( "Failed to remove pid file: {}", pid_path.display() );
