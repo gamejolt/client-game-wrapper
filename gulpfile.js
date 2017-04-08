@@ -10,10 +10,11 @@ let fs = require( 'fs' );
 let path = require( 'path' );
 let del = require( 'del' );
 let Download = require( 'download' );
+let config = require( 'config' );
 
 gulp.task( 'clean', function()
 {
-	return del( './build/**/*' );
+    return del( './build/**/*' );
 } );
 
 gulp.task( 'js', shell.task( [
@@ -26,12 +27,12 @@ gulp.task( 'build-rust', shell.task( [
 
 gulp.task( 'build', [ 'build-rust' ], function( cb )
 {
-	return sequence( 'clean', 'js', cb );
+    return sequence( 'clean', 'js', cb );
 } );
 
 gulp.task( 'watch', [ 'build' ], function()
 {
-	gulp.watch( [ './src/**/*', 'tsconfig.json' ], [ 'build' ] );
+    gulp.watch( [ './src/**/*', 'tsconfig.json' ], [ 'build' ] );
 } );
 
 gulp.task( 'fetch-binaries', function()
@@ -44,6 +45,7 @@ gulp.task( 'fetch-binaries', function()
     let travisSettings = {
         method: 'GET',
         headers: {
+            'User-Agent': 'TravisGJClientGameWrapper/' + require( './package.json' ).version,
             'Accept': 'application/vnd.travis-ci.2+json',
         },
         json: true,
@@ -56,16 +58,41 @@ gulp.task( 'fetch-binaries', function()
         resolveWithFullResponse: true,
     };
 
-    let settings = _.defaults( { uri: 'https://api.travis-ci.org/repos?slug=gamejolt%2Fclient-game-wrapper' }, travisSettings );
     return del( './bin/**/*' )
         .then( function()
         {
+            let settings = _.defaults( {
+                method: 'POST',
+                uri: 'https://api.travis-ci.org/auth/github',
+                body: {
+                    github_token: config.github_token,
+                },
+            }, travisSettings );
+
+            return rp( settings );
+        } )
+        .then( function( response )
+        {
+            if ( !response || !response.body ) {
+                throw new Error( 'Invalid travis auth/github response' );
+            }
+
+            if ( response.statusCode != 200 || !response.body.access_token ) {
+                throw new Error( 'Could not get travis access token. Response:\n' + JSON.stringify( response.body, null, 2 ) );
+            }
+
+            travisSettings.headers['Authorization'] = 'token ' + response.body.access_token;
+
+            let settings = _.defaults( {
+                uri: 'https://api.travis-ci.org/repos?slug=gamejolt%2Fclient-game-wrapper',
+            }, travisSettings );
+
             return rp( settings );
         } )
         .then( function( response )
         {
             if ( !response || response.statusCode != 200 || !response.body ) {
-                throw new Error( 'Invalid response' );
+                throw new Error( 'Invalid travis /repos response' );
             }
 
             if ( !response.body.repos || !response.body.repos[0] || response.body.repos[0].last_build_state !== 'passed' ) {
@@ -75,13 +102,15 @@ gulp.task( 'fetch-binaries', function()
             let latestBuildId = response.body.repos[0].last_build_id;
             travisLatestBuildNumber = response.body.repos[0].last_build_number;
 
-            settings = _.defaults( { uri: 'https://api.travis-ci.org/builds/' + latestBuildId }, travisSettings );
+            let settings = _.defaults( {
+                uri: 'https://api.travis-ci.org/builds/' + latestBuildId,
+            }, travisSettings );
             return rp( settings );
         } )
         .then( function( response )
         {
             if ( !response || response.statusCode != 200 || !response.body ) {
-                throw new Error( 'Invalid response' );
+                throw new Error( 'Invalid travis /builds response' );
             }
 
             if ( !response.body.build || response.body.build.state !== 'passed' || !response.body.jobs ) {
@@ -106,7 +135,9 @@ gulp.task( 'fetch-binaries', function()
                 }
             }
 
-            settings = _.defaults( { uri: 'https://ci.appveyor.com/api/projects/hworld/client-game-wrapper' }, appveyorSettings );
+            let settings = _.defaults( {
+                uri: 'https://ci.appveyor.com/api/projects/hworld/client-game-wrapper',
+            }, appveyorSettings );
             return rp( settings );
         } )
         .then( function( response )
@@ -116,7 +147,7 @@ gulp.task( 'fetch-binaries', function()
             }
 
             let appveyorJob = 0;
-            if ( response.body.build.jobs[0].name === 'Environment: TARGET=i686-pc-windows-gnu' ) {
+            if ( response.body.build.jobs[0].name === 'Environment: TARGET=i686-pc-windows-gnu, BITS=32' ) {
                 appveyorJob = response.body.build.jobs[0];
             }
             else {
@@ -129,7 +160,9 @@ gulp.task( 'fetch-binaries', function()
 
             appveyorJobId = appveyorJob.jobId;
 
-            settings = _.defaults( { uri: 'https://ci.appveyor.com/api/buildjobs/' + appveyorJobId + '/artifacts' }, appveyorSettings );
+            let settings = _.defaults( {
+                uri: 'https://ci.appveyor.com/api/buildjobs/' + appveyorJobId + '/artifacts',
+            }, appveyorSettings );
             return rp( settings );
         } )
         .then( function( response )

@@ -28,6 +28,7 @@ addons:
 before_install:
   - rustc -V
   - cargo -V
+  - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CFLAGS="-I/usr/local/opt/openssl/include $CFLAGS" LDFLAGS="-L/usr/local/opt/openssl/lib $LDFLAGS"; fi'
   - git submodule update --init --recursive
   - git clone https://github.com/creationix/nvm.git ./.nvm
   - source ./.nvm/nvm.sh
