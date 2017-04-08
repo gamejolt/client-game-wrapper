@@ -5,6 +5,9 @@
   "bugs": {
     "url": "https://github.com/gamejolt/client-game-wrapper/issues"
   },
+  "scripts": {
+    "fetch-binaries": "NODE_ENV=development gulp fetch-binaries"
+  },
   "license": "MIT",
   "author": "Game Jolt Team",
   "repository": {
@@ -14,6 +17,7 @@
   "main": "build/index.js",
   "devDependencies": {
     "@types/node": "^4.0.30",
+    "config": "^1.25.1",
     "del": "2.2.0",
     "download": "^4.4.3",
     "gulp": "3.9.0",
