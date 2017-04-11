@@ -121,7 +121,7 @@ fn main()
     game_file_credentials.push( ".gj-credentials" );
 
     // Copy over the credential file from the package directory to the game executable's directory.
-    let mut supports_game_api = std::fs::copy( package_credentials.as_path(), game_file_credentials.as_path() ).is_ok();
+    let mut supports_game_api = package_credentials == game_file_credentials || std::fs::copy( package_credentials.as_path(), game_file_credentials.as_path() ).is_ok();
 
     let mut credentials: Credentials = Credentials{ username: String::new(), user_token: String::new() };
     if supports_game_api {
