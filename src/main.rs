@@ -1,5 +1,5 @@
 use std::process::{ Child, Command, Stdio, ExitStatus };
-use std::io::{ BufRead, BufReader, BufWriter, Read,  Write };
+use std::io::{ BufWriter, Read,  Write };
 use std::path::{ Path, PathBuf };
 use std::net::{ TcpListener, TcpStream };
 use std::thread;
@@ -30,32 +30,6 @@ fn create_listener() -> Result<ListenerData, &'static str>
     }
 
     Err( &"Failed to bind port" )
-}
-
-struct Credentials {
-    username: String,
-    user_token: String,
-}
-
-fn parse_credentials( credentials_file: &Path ) -> Result<Credentials, &str>
-{
-    let f = File::open( credentials_file ).unwrap();
-    let mut reader = BufReader::new( f );
-
-    let mut credentials_version = String::new();
-    reader.read_line( &mut credentials_version ).unwrap();
-    match credentials_version.trim().as_ref() {
-        "0.1.0" |
-        "0.2.0" |
-        "0.2.1" => {
-            let mut username = String::new();
-            let mut token = String::new();
-            reader.read_line( &mut username ).unwrap();
-            reader.read_line( &mut token ).unwrap();
-            Ok( Credentials{ username: username.trim().to_string(), user_token: token.trim().to_string() } )
-        },
-        _ => Err( "Unknown version" ),
-    }
 }
 
 fn main()
@@ -122,20 +96,8 @@ fn main()
     game_file_credentials.push( ".gj-credentials" );
 
     // Copy over the credential file from the package directory to the game executable's directory.
-    let mut supports_game_api = package_credentials == game_file_credentials || std::fs::copy( package_credentials.as_path(), game_file_credentials.as_path() ).is_ok();
-
-    let mut credentials: Credentials = Credentials{ username: String::new(), user_token: String::new() };
-    if supports_game_api {
-        let get_credentials = parse_credentials( game_file_credentials.as_path() );
-        supports_game_api = get_credentials.is_ok();
-        credentials = get_credentials.unwrap();
-    }
-
-    if supports_game_api {
-        game_args.push( String::from( "gjapi_username" ) );
-        game_args.push( credentials.username.to_string() );
-        game_args.push( String::from( "gjapi_token" ) );
-        game_args.push( credentials.user_token.to_string() );
+    if package_credentials != game_file_credentials {
+        std::fs::copy( package_credentials.as_path(), game_file_credentials.as_path() ).unwrap();
     }
 
     let mut game_handle: Child = Command::new( &game_file )
